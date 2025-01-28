@@ -43,10 +43,75 @@ public List<Message> getAllMessages(){
     try{
         String retreiveAll = "SELECT * FROM Message";
         PreparedStatement ps = conn.prepareStatement(retreiveAll);
-        ResultSet AllMessages = ps.executeQuery();
+        ResultSet allMessages = ps.executeQuery();
+        while(allMessages.next()){
+            Message message = new Message(allMessages.getInt("message_id"), allMessages.getInt("posted_by"), allMessages.getString("message_text"), allMessages.getLong("time_posted_epoch"));
+            messages.add(message);
+        }
+    } catch (SQLException e){
+        System.out.println(e.getMessage());
+    }
+    return messages;
+}
+public Message getMessageByID(int message_id){
+    Connection conn = ConnectionUtil.getConnection();
+    try {
+        String messageById = "SELECT * FROM Message WHERE message_id = ?";
+        PreparedStatement ps = conn.prepareStatement(messageById);
+        ps.setInt(1, message_id);
+        ResultSet message = ps.executeQuery();
+        while(message.next()){
+            Message oneMessage = new Message(message.getInt("message_id"), message.getInt("posted_by"), message.getString("message_text"), message.getLong("time_posted_epoch"));
+            return oneMessage;
+        }
 
     } catch (SQLException e){
         System.out.println(e.getMessage());
     }
+    return null;
+} 
+public boolean deleteMessagebyID(int message_id){
+    Connection conn = ConnectionUtil.getConnection();
+    try {
+        String deleteMessage = "DELETE FROM Message WHERE message_id = ?";
+        PreparedStatement ps = conn.prepareStatement(deleteMessage);
+        ps.setInt(1, message_id);
+        int rowsAffected = ps.executeUpdate();
+        return rowsAffected > 0;
+    }catch (SQLException e){
+        System.out.println(e.getMessage());
+    }
+    return false;
+}
+public boolean updateMessageByID(int message_id, String newMessageText){
+    Connection conn = ConnectionUtil.getConnection();
+    try {
+        String editMessage = "UPDATE Messages SET message_text = ? WHERE message_id = ?";
+        PreparedStatement ps = conn.prepareStatement(editMessage);
+        ps.setString(1, newMessageText);
+        ps.setInt(2, message_id);
+        int rowsAffected = ps.executeUpdate();
+        return rowsAffected > 0;
+    } catch (SQLException e){
+        System.out.println(e.getMessage());
+    }
+    return false;
+}
+public List<Message> messagesByUser(int posted_by){
+    Connection conn = ConnectionUtil.getConnection();
+    List<Message> userMessages = new ArrayList<>();
+    try{
+        String retreiveAll = "SELECT * FROM Message WHERE posted_by = ?";
+        PreparedStatement ps = conn.prepareStatement(retreiveAll);
+        ps.setInt(1, posted_by);
+        ResultSet allUserMessages = ps.executeQuery();
+        while(allUserMessages.next()){
+            Message message = new Message(allUserMessages.getInt("message_id"), allUserMessages.getInt("posted_by"), allUserMessages.getString("message_text"), allUserMessages.getLong("time_posted_epoch"));
+            userMessages.add(message);
+        }
+    } catch (SQLException e){
+        System.out.println(e.getMessage());
+    }
+    return userMessages;
 }
 }
