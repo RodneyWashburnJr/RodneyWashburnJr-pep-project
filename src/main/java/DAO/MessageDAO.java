@@ -12,7 +12,7 @@ public class MessageDAO {
 public Message newMessage(Message message){
     Connection conn = ConnectionUtil.getConnection();
     try{
-        String createMessage = "INSERT INTO Message (posted_by, message_text, time_posted_epoch) VALUE (?, ?, ?)";
+        String createMessage = "INSERT INTO Message (posted_by, message_text, time_posted_epoch) VALUES (?, ?, ?)";
         PreparedStatement ps = conn.prepareStatement(createMessage, Statement.RETURN_GENERATED_KEYS);
         long currentTimeMillis = System.currentTimeMillis();
         ps.setInt(1, message.getPosted_by());
@@ -86,7 +86,7 @@ public boolean deleteMessagebyID(int message_id){
 public boolean updateMessageByID(int message_id, String newMessageText){
     Connection conn = ConnectionUtil.getConnection();
     try {
-        String editMessage = "UPDATE Messages SET message_text = ? WHERE message_id = ?";
+        String editMessage = "UPDATE Message SET message_text = ? WHERE message_id = ?";
         PreparedStatement ps = conn.prepareStatement(editMessage);
         ps.setString(1, newMessageText);
         ps.setInt(2, message_id);

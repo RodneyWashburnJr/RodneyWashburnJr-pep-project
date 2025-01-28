@@ -8,6 +8,9 @@ public class AccountDAO {
     public Account newAccount(Account account){
         Connection conn = ConnectionUtil.getConnection();
         try{
+            if (account.getUsername() == null || account.getPassword() == null) {
+                throw new IllegalArgumentException("Username and password cannot be null.");
+            }
             String setAcc = "INSERT INTO Account (username, password) VALUES (?, ?)";
             PreparedStatement ps = conn.prepareStatement(setAcc, Statement.RETURN_GENERATED_KEYS);
             ps.setString(1, account.getUsername());
