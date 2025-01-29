@@ -12,28 +12,34 @@ public class MessageDAO {
 public Message newMessage(Message message){
     Connection conn = ConnectionUtil.getConnection();
     try{
+        String checkUser = "SELECT * FROM Account WHERE account_id = ?";
+        PreparedStatement userPs = conn.prepareStatement(checkUser);
+        userPs.setInt(1, message.getPosted_by());
+        ResultSet userResult = userPs.executeQuery();
+        if (!userResult.next()) {  // If no user found, return null
+            System.out.println("User ID " + message.getPosted_by() + " does not exist.");  // Debugging log
+            return null;
+        }
+
         String createMessage = "INSERT INTO Message (posted_by, message_text, time_posted_epoch) VALUES (?, ?, ?)";
         PreparedStatement ps = conn.prepareStatement(createMessage, Statement.RETURN_GENERATED_KEYS);
-        long currentTimeMillis = System.currentTimeMillis();
         ps.setInt(1, message.getPosted_by());
         ps.setString(2, message.getMessage_text());
-        ps.setLong(3, currentTimeMillis);
+        ps.setLong(3, message.getTime_posted_epoch());
 
-        ps.executeUpdate();
-        ResultSet messages = ps.getGeneratedKeys();
-        if(messages.next()){
-            int generatedID = messages.getInt(1);
-            message.setMessage_id(generatedID);
+        int affectedRows = ps.executeUpdate();
+
+        if (affectedRows > 0){
+            ResultSet generatedKeys = ps.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                message.setMessage_id(generatedKeys.getInt(1));  // Set the generated ID
+            }
+            return message;
         }
-        message.setTime_posted_epoch(currentTimeMillis);
-        LocalDateTime dateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(currentTimeMillis), ZoneId.systemDefault());
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm:ss a z");
-        System.out.println("Message created at: " + dateTime.format(formatter));
-        return message;
 
 
     } catch (SQLException e){
-        System.out.println(e.getMessage());
+        e.printStackTrace();
     }
     return null;
 }
@@ -49,7 +55,7 @@ public List<Message> getAllMessages(){
             messages.add(message);
         }
     } catch (SQLException e){
-        System.out.println(e.getMessage());
+        e.printStackTrace();
     }
     return messages;
 }
@@ -66,7 +72,7 @@ public Message getMessageByID(int message_id){
         }
 
     } catch (SQLException e){
-        System.out.println(e.getMessage());
+        e.printStackTrace();
     }
     return null;
 } 
@@ -79,7 +85,7 @@ public boolean deleteMessagebyID(int message_id){
         int rowsAffected = ps.executeUpdate();
         return rowsAffected > 0;
     }catch (SQLException e){
-        System.out.println(e.getMessage());
+        e.printStackTrace();
     }
     return false;
 }
@@ -93,7 +99,7 @@ public boolean updateMessageByID(int message_id, String newMessageText){
         int rowsAffected = ps.executeUpdate();
         return rowsAffected > 0;
     } catch (SQLException e){
-        System.out.println(e.getMessage());
+        e.printStackTrace();
     }
     return false;
 }
@@ -110,7 +116,7 @@ public List<Message> messagesByUser(int posted_by){
             userMessages.add(message);
         }
     } catch (SQLException e){
-        System.out.println(e.getMessage());
+        e.printStackTrace();
     }
     return userMessages;
 }

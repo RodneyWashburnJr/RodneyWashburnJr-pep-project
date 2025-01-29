@@ -16,17 +16,20 @@ public class MessageService {
         return messageDAO.getAllMessages();
     }
     public Message addMessage(Message message) {
-        try {
-            // Add validation if needed (e.g., message text must not be empty)
-            if (message.getMessage_text() == null || message.getMessage_text().isEmpty()) {
-                throw new IllegalArgumentException("Message text cannot be null or empty.");
-            }
-            return messageDAO.newMessage(message);
-        } catch (Exception e) {
-            System.err.println("Error adding message: " + e.getMessage());
+        if (message.getMessage_text() == null || message.getMessage_text().isEmpty()) {
+            System.out.println("Message text is empty or null.");  
             return null;
         }
-
+        if (message.getMessage_text().length() > 255) {
+            System.out.println("Message text exceeds 255 characters.");  
+            return null;
+        }
+        Message newMessage = messageDAO.newMessage(message);
+        if (newMessage == null) {
+            System.out.println("Message creation failed in DAO layer.");  
+        }
+        return newMessage;
+        
     }
     public List<Message> getAllMessageByID(int posted_by) {
         return messageDAO.messagesByUser(posted_by);
@@ -45,7 +48,7 @@ public class MessageService {
     public boolean updateByID(int message_id, String newMessageText){
         try {
             if (newMessageText == null || newMessageText.isEmpty()) {
-                throw new IllegalArgumentException("New message text cannot be null or empty.");
+                return false;
             }
             return messageDAO.updateMessageByID(message_id, newMessageText);
         } catch (Exception e) {

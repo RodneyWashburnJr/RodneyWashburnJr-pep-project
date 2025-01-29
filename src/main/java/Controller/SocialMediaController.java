@@ -58,12 +58,15 @@ public class SocialMediaController {
     // Message Handlers
     private void createMessage(Context context) {
         try {
-            Message message = context.bodyAsClass(Message.class);
+            Message message = context.bodyAsClass(Message.class);if (message.getMessage_text() == null || message.getMessage_text().isEmpty() || message.getMessage_text().length() > 255) {
+                context.status(400);
+                return;
+            }
             Message newMessage = messageService.addMessage(message);
             if (newMessage != null) {
-                context.status(201).json(newMessage);
+                context.status(200).json(newMessage);
             } else {
-                context.status(400).result("Message could not be created.");
+                context.status(400);
             }
         } catch (Exception e) {
             context.status(500).result("Internal Server Error: " + e.getMessage());
@@ -120,9 +123,16 @@ public class SocialMediaController {
         try {
             int messageId = Integer.parseInt(context.pathParam("message_id"));
             String newMessageText = context.body();
+            
+            if (newMessageText == null || newMessageText.trim().isEmpty()) {
+                context.status(400).result("Message text cannot be empty.");
+                return;
+            }
+    
             boolean isUpdated = messageService.updateByID(messageId, newMessageText);
             if (isUpdated) {
-                context.status(200).result("Message updated successfully.");
+                Message updatedMessage = messageService.getOneMessageByID(messageId);
+                context.status(200).json(updatedMessage);
             } else {
                 context.status(404).result("Message not found.");
             }

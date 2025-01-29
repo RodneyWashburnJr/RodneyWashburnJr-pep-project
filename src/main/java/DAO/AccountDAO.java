@@ -23,7 +23,7 @@ public class AccountDAO {
                 return new Account(generatedID, account.getUsername(), account.getPassword());
             }
         } catch (SQLException e){
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
         return null;
     }
