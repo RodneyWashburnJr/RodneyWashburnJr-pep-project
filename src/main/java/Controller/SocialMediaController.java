@@ -110,11 +110,14 @@ public class SocialMediaController {
         try {
             int messageId = Integer.parseInt(context.pathParam("message_id"));
             Message deletedMessage = messageService.getOneMessageByID(messageId);
-            boolean isDeleted = messageService.deleteByID(messageId);
-            if (isDeleted) {
-                context.status(200).json(deletedMessage);
+            if (deletedMessage != null) {
+                boolean isDeleted = messageService.deleteByID(messageId);
+                if (isDeleted) {
+                    context.status(200).json(deletedMessage); // Return the deleted message
+                    return;
+                }
             }
-            context.status(200).result(""); 
+            context.status(200); 
         } catch (NumberFormatException e) {
             context.status(400).result("Invalid message ID.");
         }
