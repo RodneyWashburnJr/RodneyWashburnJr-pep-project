@@ -100,16 +100,16 @@ public boolean updateMessageByID(int message_id, String newMessageText){
         return rowsAffected > 0;
     } catch (SQLException e){
         e.printStackTrace();
+        return false;
     }
-    return false;
 }
-public List<Message> messagesByUser(int posted_by){
+public List<Message> messagesByUser(int account_id){
     Connection conn = ConnectionUtil.getConnection();
     List<Message> userMessages = new ArrayList<>();
     try{
         String retreiveAll = "SELECT * FROM Message WHERE posted_by = ?";
         PreparedStatement ps = conn.prepareStatement(retreiveAll);
-        ps.setInt(1, posted_by);
+        ps.setInt(1, account_id);
         ResultSet allUserMessages = ps.executeQuery();
         while(allUserMessages.next()){
             Message message = new Message(allUserMessages.getInt("message_id"), allUserMessages.getInt("posted_by"), allUserMessages.getString("message_text"), allUserMessages.getLong("time_posted_epoch"));

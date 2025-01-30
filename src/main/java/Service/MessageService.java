@@ -31,8 +31,8 @@ public class MessageService {
         return newMessage;
         
     }
-    public List<Message> getAllMessageByID(int posted_by) {
-        return messageDAO.messagesByUser(posted_by);
+    public List<Message> getAllMessageByUser(int account_id) {
+        return messageDAO.messagesByUser(account_id);
     }
     public Message getOneMessageByID(int message_id){
         return messageDAO.getMessageByID(message_id);

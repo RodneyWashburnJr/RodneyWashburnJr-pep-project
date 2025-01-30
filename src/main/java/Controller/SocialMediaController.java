@@ -6,7 +6,12 @@ import Model.Account;
 import Model.Message;
 import Service.AccountService;
 import Service.MessageService;
+
+import java.io.IOException;
 import java.util.List;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 /**
  * TODO: You will need to write your own endpoints and handlers for your controller. The endpoints you will need can be
  * found in readme.md as well as the test cases. You should
@@ -29,10 +34,10 @@ public class SocialMediaController {
         app.post("/accounts", this::createAccount);
         app.post("/messages", this::createMessage);
         app.get("/messages", this::getAllMessages);
-        app.get("/messages/user/{posted_by}", this::getAllMessagesByID);
+        app.get("/accounts/{id}/messages", this::getAllMessagesByUser);
         app.get("/messages/{message_id}", this::getMessageByID);
         app.delete("/messages/{message_id}", this::deleteMessagebyID);
-        app.put("/messages/{message_id}", this::updateMessageByID);
+        app.patch("/messages/{message_id}", this::updateMessageByID);
         return app;
     }
 
@@ -77,15 +82,11 @@ public class SocialMediaController {
         List<Message> messages = messageService.getAllMessages();
         context.json(messages);
     }
-    private void getAllMessagesByID(Context context) {
+    private void getAllMessagesByUser(Context context) {
         try {
-            int postedBy = Integer.parseInt(context.pathParam("posted_by"));
-            List<Message> messages = messageService.getAllMessageByID(postedBy);
-            if (messages.isEmpty()) {
-                context.status(404).result("No messages found for this user.");
-            } else {
-                context.json(messages);
-            }
+            int accountID = Integer.parseInt(context.pathParam("id"));
+            List<Message> messages = messageService.getAllMessageByUser(accountID);
+            context.status(200).json(messages);
         } catch (NumberFormatException e) {
             context.status(400).result("Invalid user ID.");
         }
@@ -98,7 +99,7 @@ public class SocialMediaController {
             if (message != null) {
                 context.json(message);
             } else {
-                context.status(404).result("Message not found.");
+                context.status(200).result("");
             }
         } catch (NumberFormatException e) {
             context.status(400).result("Invalid message ID.");
@@ -108,12 +109,12 @@ public class SocialMediaController {
     private void deleteMessagebyID(Context context) {
         try {
             int messageId = Integer.parseInt(context.pathParam("message_id"));
+            Message deletedMessage = messageService.getOneMessageByID(messageId);
             boolean isDeleted = messageService.deleteByID(messageId);
             if (isDeleted) {
-                context.status(200).result("Message deleted successfully.");
-            } else {
-                context.status(404).result("Message not found.");
+                context.status(200).json(deletedMessage);
             }
+            context.status(200).result(""); 
         } catch (NumberFormatException e) {
             context.status(400).result("Invalid message ID.");
         }
@@ -122,10 +123,23 @@ public class SocialMediaController {
     private void updateMessageByID(Context context) {
         try {
             int messageId = Integer.parseInt(context.pathParam("message_id"));
-            String newMessageText = context.body();
+            String requestBody = context.body();
+            String newMessageText = "";
+            try{
+                ObjectMapper objectMapper = new ObjectMapper();
+                JsonNode jsonNode = objectMapper.readTree(requestBody);
+                newMessageText = jsonNode.get("message_text").asText();
+            } catch (IOException e) {
+                context.status(400).result("Invalid request body.");
+                return;
+            }
             
             if (newMessageText == null || newMessageText.trim().isEmpty()) {
-                context.status(400).result("Message text cannot be empty.");
+                context.status(400).result("");
+                return;
+            }
+            if(newMessageText.length() > 255){
+                context.status(400).result("");
                 return;
             }
     
@@ -134,7 +148,7 @@ public class SocialMediaController {
                 Message updatedMessage = messageService.getOneMessageByID(messageId);
                 context.status(200).json(updatedMessage);
             } else {
-                context.status(404).result("Message not found.");
+                context.status(400);
             }
         } catch (NumberFormatException e) {
             context.status(400).result("Invalid message ID.");
