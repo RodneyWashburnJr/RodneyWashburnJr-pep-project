@@ -31,13 +31,14 @@ public class SocialMediaController {
      */
     public Javalin startAPI() {
         Javalin app = Javalin.create();
-        app.post("/accounts", this::createAccount);
+        app.post("/register", this::createAccount);
         app.post("/messages", this::createMessage);
         app.get("/messages", this::getAllMessages);
         app.get("/accounts/{id}/messages", this::getAllMessagesByUser);
         app.get("/messages/{message_id}", this::getMessageByID);
         app.delete("/messages/{message_id}", this::deleteMessagebyID);
         app.patch("/messages/{message_id}", this::updateMessageByID);
+        app.post("/login", this::loginUser);
         return app;
     }
 
@@ -45,22 +46,24 @@ public class SocialMediaController {
      * This is an example handler for an example endpoint.
      * @param context The Javalin Context object manages information about both the HTTP request and response.
      */
-    // Account Handlers
     private void createAccount(Context context) {
         try {
             Account account = context.bodyAsClass(Account.class);
+            if (account.getUsername() == null || account.getUsername().trim().isEmpty() || account.getPassword() == null || account.getPassword().length() < 4) {
+            context.status(400).result("");
+            return;
+        }
             Account newAccount = accountService.addAccount(account);
             if (newAccount != null) {
-                context.status(201).json(newAccount);
+                context.status(200).json(newAccount);
             } else {
-                context.status(400).result("Account could not be created.");
+                context.status(400).result("");
             }
         } catch (Exception e) {
             context.status(500).result("Internal Server Error: " + e.getMessage());
         }
     }
 
-    // Message Handlers
     private void createMessage(Context context) {
         try {
             Message message = context.bodyAsClass(Message.class);if (message.getMessage_text() == null || message.getMessage_text().isEmpty() || message.getMessage_text().length() > 255) {
@@ -157,6 +160,22 @@ public class SocialMediaController {
             context.status(400).result("Invalid message ID.");
         }
     }
-
+    private void loginUser(Context context) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            Account loginRequest = objectMapper.readValue(context.body(), Account.class);
+    
+            // Validate user credentials
+            Account authenticatedUser = accountService.authenticateUser(loginRequest.getUsername(), loginRequest.getPassword());
+    
+            if (authenticatedUser != null) {
+                context.status(200).json(authenticatedUser);
+            } else {
+                context.status(401).result("");  // Unauthorized
+            }
+        } catch (IOException e) {
+            context.status(400).result("Invalid request format.");
+        }
+    }
 
 }

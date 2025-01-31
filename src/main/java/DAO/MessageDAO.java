@@ -16,8 +16,8 @@ public Message newMessage(Message message){
         PreparedStatement userPs = conn.prepareStatement(checkUser);
         userPs.setInt(1, message.getPosted_by());
         ResultSet userResult = userPs.executeQuery();
-        if (!userResult.next()) {  // If no user found, return null
-            System.out.println("User ID " + message.getPosted_by() + " does not exist.");  // Debugging log
+        if (!userResult.next()) {  
+            System.out.println("User ID " + message.getPosted_by() + " does not exist."); 
             return null;
         }
 
@@ -32,7 +32,7 @@ public Message newMessage(Message message){
         if (affectedRows > 0){
             ResultSet generatedKeys = ps.getGeneratedKeys();
             if (generatedKeys.next()) {
-                message.setMessage_id(generatedKeys.getInt(1));  // Set the generated ID
+                message.setMessage_id(generatedKeys.getInt(1));  
             }
             return message;
         }

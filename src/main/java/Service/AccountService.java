@@ -13,10 +13,12 @@ public class AccountService {
     }
     public Account addAccount(Account account) {
         if (account.getUsername() == null || account.getUsername().isEmpty()) {
-            throw new IllegalArgumentException("Username cannot be null or empty.");
+            System.out.println("Username cannot be null or empty.");
+            return null;
         }
-        if (account.getPassword() == null || account.getPassword().isEmpty()) {
-            throw new IllegalArgumentException("Password cannot be null or empty.");
+        if (account.getPassword() == null || account.getPassword().isEmpty() || account.getPassword().length() < 4) {
+            System.out.println("Username cannot be null or empty.");
+            return null;
         }
 
         // Delegate to DAO
@@ -25,5 +27,12 @@ public class AccountService {
             System.out.println("Account creation failed.");
         }
         return newAccount;
+    }
+    public Account authenticateUser(String username, String password) {
+        Account account = accountDAO.getAccountByUsername(username);
+        if (account != null && account.getPassword().equals(password)) {
+            return account;
+        }
+        return null; 
     }
 }
